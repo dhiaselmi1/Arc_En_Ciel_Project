@@ -1,0 +1,22 @@
+Objet : Arc En Ciel — Subventions de la semaine du {{ monday_date }}
+
+Bonjour,
+
+Voici les meilleures opportunités de subventions trouvées cette semaine pour votre projet.
+
+{% for g in grants %}
+---
+
+{{ g.medal }} Opportunité {{ loop.index }} — {{ g.title }}
+- Organisation : {{ g.organization or "non spécifiée" }}
+- Montant : {{ g.amount or "non spécifié" }}
+- Date limite : {{ g.deadline or "non spécifiée" }}
+- Pourquoi ça correspond : {{ g.score_reason }}
+- Comment postuler : voir le lien ci-dessous pour les modalités.
+- Lien : {{ g.source_url }}
+{% endfor %}
+
+---
+
+Bonne chance pour vos candidatures !
+L'agent Arc En Ciel 🌈

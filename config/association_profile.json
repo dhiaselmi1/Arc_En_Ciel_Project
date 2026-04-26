@@ -1,0 +1,49 @@
+{
+  "name": "Arc En Ciel",
+  "location": {
+    "city": "Sidi Daoued",
+    "country": "Tunisie",
+    "region": "Afrique du Nord / MENA"
+  },
+  "founded": 2012,
+  "type": "ONG",
+  "sector": "Éducation, handicap, inclusion",
+  "mission": "Association pour l'éducation, la formation et l'intégration des enfants à déficience mentale légère, spécialement les enfants trisomiques.",
+  "beneficiaries": "Enfants atteints de trisomie 21 et leurs familles",
+  "languages": ["fr", "ar"],
+  "target_project": {
+    "title": "Équipement et développement du nouveau local d'Arc En Ciel",
+    "description": "Aménagement du nouveau local en cours de construction : achat de mobilier et d'équipements adaptés pour l'accueil et l'apprentissage des enfants trisomiques, et mise en place d'un atelier de pâtisserie complet (four, plan de travail, ustensiles, équipements de sécurité) pour développer l'autonomie et les compétences pratiques.",
+    "expected_impact": "Ouvrir le nouveau local, accueillir plus d'enfants, et offrir des activités pratiques qui aident les enfants à gagner en autonomie et à s'intégrer dans la société.",
+    "keywords": [
+      "trisomie 21",
+      "déficience mentale légère",
+      "inclusion",
+      "handicap",
+      "éducation spécialisée",
+      "autonomie",
+      "atelier pâtisserie",
+      "formation professionnelle",
+      "mobilier adapté",
+      "équipement"
+    ]
+  },
+  "preferred_grant_criteria": {
+    "min_amount_usd": 5000,
+    "max_amount_usd": 50000,
+    "preferred_sectors": [
+      "inclusion",
+      "handicap",
+      "éducation spécialisée",
+      "droits de l'enfant",
+      "autonomie",
+      "formation professionnelle"
+    ],
+    "geographic_scope": ["locale", "nationale", "internationale"],
+    "preferred_languages": ["fr", "ar", "en"]
+  },
+  "contact": {
+    "email": "rahmaouerfelli555@gmail.com",
+    "notification_frequency": "weekly"
+  }
+}

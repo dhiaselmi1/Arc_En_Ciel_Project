@@ -76,10 +76,13 @@ def _extract_json(text: str) -> dict[str, Any] | None:
 
 
 def _extract_grant(llm, result: dict[str, Any]) -> dict[str, Any] | None:
+    # 4000 chars: long enough to capture the "Eligibility / Who can apply"
+    # section that often sits halfway down the page (1500 was missing it
+    # for grants like the US-only Disability Inclusion Fund).
     prompt = EXTRACT_GRANT_FROM_RESULT.format(
         url=result["url"],
         title=result["title"],
-        content=result["content"][:1500],
+        content=result["content"][:4000],
     )
     throttle()
     resp = llm.invoke(

@@ -42,6 +42,35 @@
     "geographic_scope": ["locale", "nationale", "internationale"],
     "preferred_languages": ["fr", "ar", "en"]
   },
+  "grant_geographic_eligibility": {
+    "_comment": "PREMIER critère d'éligibilité (filtre dur). La zone géographique de la subvention doit couvrir la Tunisie. Tunisie = Afrique du Nord / Maghreb / MENA — PAS Afrique subsaharienne.",
+    "eligible_regions": [
+      "Tunisie / Tunisia",
+      "Maghreb",
+      "Afrique du Nord / North Africa",
+      "MENA (Middle East and North Africa)",
+      "EMEA (Europe, Middle East, Africa)",
+      "Méditerranée / Mediterranean",
+      "Afrique (générique, sans restriction sub-régionale excluant le Nord)",
+      "Pays arabes / Arab world",
+      "International / Global / Worldwide",
+      "Pays à revenu intermédiaire / LMIC",
+      "Union pour la Méditerranée",
+      "Pays francophones / Francophonie"
+    ],
+    "excluded_regions": [
+      "Afrique subsaharienne uniquement / Sub-Saharan Africa only",
+      "Afrique de l'Ouest uniquement / West Africa only",
+      "Afrique de l'Est uniquement / East Africa only",
+      "Afrique australe uniquement / Southern Africa only",
+      "Pays spécifiques non-MENA uniquement (ex: Kenya, Nigeria, Sénégal, Ghana, Ouganda, Tanzanie, Éthiopie, RDC, etc.)",
+      "Amérique latine uniquement / Latin America only",
+      "Asie uniquement / Asia only",
+      "USA / Canada uniquement",
+      "Europe de l'Ouest uniquement / Western Europe only",
+      "UE uniquement (Tunisie n'est pas membre de l'UE)"
+    ]
+  },
   "contact": {
     "email": "rahmaouerfelli555@gmail.com",
     "notification_frequency": "weekly"

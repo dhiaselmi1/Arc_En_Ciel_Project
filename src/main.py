@@ -78,7 +78,7 @@ def run_pipeline(skip_send: bool = False) -> None:
         return
 
     print("\n=== STEP 4: Send weekly digest ===")
-    sent = send_weekly_digest(settings, limit=5)
+    sent = send_weekly_digest(settings, min_limit=3, max_limit=5)
     print(f"  → digest sent with {sent} opportunities\n")
 
 

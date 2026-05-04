@@ -64,8 +64,19 @@ def _build_whatsapp(grants: list[dict[str, Any]]) -> str:
     return "\n".join(lines)
 
 
-def send_weekly_digest(settings: Settings, limit: int = 5) -> int:
-    grants = top_n(settings, limit=limit)
+def send_weekly_digest(
+    settings: Settings,
+    min_limit: int = 3,
+    max_limit: int = 5,
+) -> int:
+    """Send the weekly digest with between min_limit and max_limit opportunities.
+
+    The geographic eligibility filter (critère N°1) may reduce the pool below
+    max_limit. In that case we send what we have without padding — better to
+    send 3 quality matches than 5 with sub-Saharan-only grants the association
+    cannot apply to.
+    """
+    grants = top_n(settings, limit=max_limit)
     if not grants:
         log.info("No grants to send this week.")
         # Still notify by email to confirm the agent ran
@@ -83,10 +94,16 @@ def send_weekly_digest(settings: Settings, limit: int = 5) -> int:
         send_whatsapp(settings, _build_whatsapp([]))
         return 0
 
+    if len(grants) < min_limit:
+        log.warning(
+            "Only %d grant(s) match — below the min_limit of %d. Sending anyway.",
+            len(grants), min_limit,
+        )
+
     subject, body = _build_email(grants)
     send_email(settings, subject, body)
     send_whatsapp(settings, _build_whatsapp(grants))
 
     mark_notified(settings, [g["id"] for g in grants])
-    log.info("Digest sent with %d grants", len(grants))
+    log.info("Digest sent with %d grants (range %d-%d)", len(grants), min_limit, max_limit)
     return len(grants)

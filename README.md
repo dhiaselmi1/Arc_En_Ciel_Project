@@ -31,7 +31,7 @@ Le projet est conçu pour tourner **gratuitement** sur GitHub Actions, une fois 
 - **Scoring 0–100** pondéré : éligibilité (40%) · alignement mission (30%) · montant (15%) · deadline (15%).
 - **Tri hiérarchique 4 buckets** privilégiant les opportunités complètes (montant + deadline renseignés) et jamais notifiées.
 - **Stockage SQLite** avec déduplication par hash SHA256 de l'URL, machine à états (`new` → `evaluated` → `scored`/`rejected`/`expired` → `notified`).
-- **Notifications doubles** : email HTML (template Jinja2) + WhatsApp (Twilio Sandbox, avec chunking automatique > 1500 caractères).
+- **Notifications doubles** : email HTML (template Jinja2) + WhatsApp (CallMeBot, avec chunking automatique > 1500 caractères).
 - **Cron hebdomadaire** via GitHub Actions chaque lundi à 07:00 (heure de Tunis).
 - **CLI** avec flags `--dry-run`, `--stats`, `--reset-rejected` pour debug et opérations manuelles.
 
@@ -48,7 +48,7 @@ Le projet est conçu pour tourner **gratuitement** sur GitHub Actions, une fois 
 | Fallback recherche | DuckDuckGo (via `duckduckgo-search`) | Pas de clé requise, prend le relais si Tavily est vide |
 | Stockage | SQLite | Zéro infrastructure, fichier unique versionnable comme artefact |
 | Email | SMTP Gmail + App Password | Gratuit, fiable, pas d'infra dédiée |
-| WhatsApp | Twilio Sandbox | Gratuit pour les tests, API simple (`whatsapp:+...`) |
+| WhatsApp | CallMeBot | Gratuit, sans Twilio ni vérification entreprise — un simple `requests.get` HTTPS |
 | Templates | Jinja2 | Standard Python, séparation logique/présentation |
 | Hébergement | GitHub Actions (cron) | Gratuit, intégré au repo, secrets sécurisés |
 | Documentation | python-docx | Génération du dossier technique `.docx` |
@@ -87,7 +87,7 @@ Le projet est conçu pour tourner **gratuitement** sur GitHub Actions, une fois 
                     └───────┬──────┬───────┘
                             │      │
                        Email │      │ WhatsApp
-                       (SMTP)│      │ (Twilio)
+                       (SMTP)│      │ (CallMeBot)
                             ▼      ▼
                        Destinataire(s)
 ```
@@ -104,7 +104,7 @@ Chaque étape est **idempotente** : relancer le pipeline ne crée pas de doublon
 - Un compte sur **Mistral AI** ([console.mistral.ai](https://console.mistral.ai)) → API key
 - Un compte sur **Tavily** ([tavily.com](https://tavily.com)) → API key (1 000 recherches/mois gratuites)
 - Un compte **Gmail** avec **2FA activée** + **App Password** ([myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords))
-- Un compte **Twilio** avec **WhatsApp Sandbox activé** ([console.twilio.com](https://console.twilio.com))
+- Un numéro WhatsApp pour le destinataire activé sur **CallMeBot** ([callmebot.com](https://www.callmebot.com/blog/free-api-whatsapp-messages/))
 
 ### Étapes
 
@@ -144,13 +144,22 @@ Crée un fichier `.env` à la racine en t'inspirant de `.env.example` :
 | `SMTP_APP_PASSWORD` | `xxxx xxxx xxxx xxxx` | App Password Gmail (16 chars, sans espaces) |
 | `EMAIL_FROM_NAME` | `Agent Arc En Ciel` | Nom affiché de l'expéditeur |
 | `EMAIL_TO` | `destinataire@example.com` | Adresse du destinataire |
-| `TWILIO_ACCOUNT_SID` | `ACxxxxxx...` | SID Twilio |
-| `TWILIO_AUTH_TOKEN` | `xxxxxx...` | Token Twilio |
-| `TWILIO_WHATSAPP_FROM` | `whatsapp:+14155238886` | Numéro fixe sandbox Twilio |
-| `WHATSAPP_TO` | `whatsapp:+21693105718` | Numéro WhatsApp destinataire (au format `whatsapp:+216...`) |
+| `CALLMEBOT_API_KEY` | `1234567` | Clé API CallMeBot retournée à l'activation |
+| `WHATSAPP_TO_PHONE` | `21693105718` | Numéro WhatsApp destinataire (digits seulement, sans `+` ni espaces) |
 | `DB_PATH` | `data/grants.db` | Chemin du fichier SQLite |
 
-> ⚠️ Le destinataire WhatsApp doit avoir **rejoint la sandbox Twilio** au préalable en envoyant le code `join <ton-mot-de-passe-sandbox>` au numéro Twilio. Le lien expire toutes les 72h en mode sandbox.
+### Activation CallMeBot (à faire une fois par destinataire)
+
+1. Le destinataire ouvre WhatsApp et envoie le message exact suivant au **+34 644 51 95 23** :
+   ```
+   I allow callmebot to send me messages
+   ```
+2. CallMeBot répond en quelques minutes avec une **API key** (un nombre).
+3. On copie cette API key dans `CALLMEBOT_API_KEY` et le numéro du destinataire (format international sans `+`) dans `WHATSAPP_TO_PHONE`.
+
+> ✅ Activation **permanente** (pas de fenêtre de 72h comme Twilio Sandbox).
+> ✅ Pas de vérification entreprise, pas de template à approuver.
+> ⚠️ Service non-officiel — fiable depuis ~2017 mais à connaître. Pour 1 message/semaine, le risque est négligeable.
 
 ---
 
@@ -221,7 +230,7 @@ Arc_En_Ciel_Project/
 │   ├── notifications/
 │   │   ├── digest.py                   # orchestration email + WhatsApp
 │   │   ├── email_sender.py             # SMTP TLS via smtplib
-│   │   └── whatsapp_sender.py          # Twilio Client + chunking > 1500 chars
+│   │   └── whatsapp_sender.py          # CallMeBot HTTP + chunking > 1500 chars
 │   └── templates/
 │       └── weekly_email.txt            # template Jinja2 du digest
 ├── tests/                              # (à compléter)
@@ -326,10 +335,8 @@ Le workflow `.github/workflows/weekly.yml` tourne automatiquement **chaque lundi
 | `SMTP_USER` | adresse Gmail expéditrice |
 | `SMTP_APP_PASSWORD` | App Password Gmail (16 chars) |
 | `EMAIL_TO` | destinataire email |
-| `TWILIO_ACCOUNT_SID` | SID Twilio |
-| `TWILIO_AUTH_TOKEN` | token Twilio |
-| `TWILIO_WHATSAPP_FROM` | `whatsapp:+14155238886` |
-| `WHATSAPP_TO` | `whatsapp:+216XXXXXXXX` |
+| `CALLMEBOT_API_KEY` | clé API CallMeBot |
+| `WHATSAPP_TO_PHONE` | numéro destinataire (digits seulement, ex: `21693105718`) |
 
 > Les noms de secrets doivent être en **MAJUSCULES** (le workflow référence `${{ secrets.MISTRAL_API_KEY }}`, etc.).
 

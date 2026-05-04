@@ -251,7 +251,7 @@ def build_document() -> Document:
         "  ┌─────────────────────────────▼──────────────────────────────────┐\n"
         "  │ STEP 4 — Digest (digest.py)                                    │\n"
         "  │   top_n bucket-sort 4 niveaux ──▶ Email Gmail SMTP             │\n"
-        "  │                                ──▶ WhatsApp Twilio             │\n"
+        "  │                                ──▶ WhatsApp CallMeBot          │\n"
         "  │   ──▶ status = 'notified'                                      │\n"
         "  └────────────────────────────────────────────────────────────────┘"
     )
@@ -269,7 +269,7 @@ def build_document() -> Document:
             ["src/agent/fetcher.py", "User Story 1 — extraction d'opportunités"],
             ["src/agent/eligibility.py", "User Story 2 — vérification d'éligibilité"],
             ["src/agent/ranker.py", "User Story 3 — scoring + ranking"],
-            ["src/notifications/", "Envoi email (SMTP) + WhatsApp (Twilio)"],
+            ["src/notifications/", "Envoi email (SMTP) + WhatsApp (CallMeBot)"],
             ["src/templates/weekly_email.txt", "Template Jinja2 du digest"],
             ["config/association_profile.json", "Profil métier d'Arc En Ciel"],
             [".github/workflows/weekly.yml", "Cron GitHub Actions hebdo"],
@@ -294,7 +294,7 @@ def build_document() -> Document:
             ["Stockage", "SQLite", "stdlib Python", "Persistance grants + dédup"],
             ["Templating", "Jinja2", "≥ 3.1.4", "Rendu du template email"],
             ["Email", "SMTP Gmail", "smtplib stdlib", "Envoi du digest"],
-            ["WhatsApp", "Twilio (Sandbox)", "≥ 9.3.0", "Envoi WhatsApp"],
+            ["WhatsApp", "CallMeBot (HTTPS GET)", "—", "Envoi WhatsApp gratuit, sans BSP"],
             ["Validation env", "python-dotenv", "≥ 1.0.1", "Chargement .env"],
             ["Cron / Hosting", "GitHub Actions", "—", "Exécution hebdomadaire gratuite"],
         ])
@@ -514,10 +514,8 @@ def build_document() -> Document:
             ["SMTP_APP_PASSWORD", "Google App Pwd", "16 caractères générés via myaccount.google.com/apppasswords"],
             ["EMAIL_FROM_NAME", "fixe", "« Agent Arc En Ciel »"],
             ["EMAIL_TO", "destinataire", "rahmaouerfelli555@gmail.com"],
-            ["TWILIO_ACCOUNT_SID", "console.twilio.com", "Identifiant compte Twilio"],
-            ["TWILIO_AUTH_TOKEN", "console.twilio.com", "Token d'authentification Twilio"],
-            ["TWILIO_WHATSAPP_FROM", "fixe", "whatsapp:+14155238886 (sandbox)"],
-            ["WHATSAPP_TO", "destinataire", "whatsapp:+216XXXXXXXX"],
+            ["CALLMEBOT_API_KEY", "callmebot.com", "Clé API CallMeBot retournée à l'activation"],
+            ["WHATSAPP_TO_PHONE", "destinataire", "Numéro international sans '+' (ex: 21693105718)"],
             ["DB_PATH", "fixe", "data/grants.db"],
         ])
 
@@ -537,7 +535,7 @@ def build_document() -> Document:
             ["duckduckgo-search", "≥ 6.3.0", "Search DuckDuckGo (fallback gratuit)"],
             ["pydantic", "≥ 2.9.0", "Validation de schémas (utilisé par LangChain)"],
             ["python-dotenv", "≥ 1.0.1", "Chargement des variables .env"],
-            ["twilio", "≥ 9.3.0", "SDK officiel Twilio (WhatsApp)"],
+            ["requests", "≥ 2.32.0", "Client HTTP pour CallMeBot (WhatsApp) et Tavily"],
             ["jinja2", "≥ 3.1.4", "Template engine pour l'email hebdo"],
             ["python-docx", "≥ 1.2.0", "Génération de cette documentation (script)"],
         ])
@@ -585,7 +583,7 @@ def build_document() -> Document:
         ".env protégé par .gitignore (jamais publié sur GitHub)",
         "Secrets GitHub stockés chiffrés dans Settings → Secrets and variables → Actions",
         "App Password Gmail : limité au scope 'mail', révocable à tout moment",
-        "Twilio Sandbox : limité aux numéros qui ont rejoint via le code 'join xxxx'",
+        "CallMeBot : activation permanente par message côté destinataire, API key non publique",
         "Aucun secret commité dans le code source",
         "DB SQLite locale uniquement — pas d'exposition publique",
     ])
@@ -600,7 +598,7 @@ def build_document() -> Document:
         "Le périmètre actuel se limite à l'Epic 1 du backlog. Plusieurs améliorations "
         "ont été identifiées mais sont reportées :")
     add_bullet(doc, [
-        "Migration de Twilio Sandbox vers Meta WhatsApp Cloud API (production)",
+        "Migration de CallMeBot (non-officiel) vers Meta WhatsApp Cloud API (production)",
         "Interface web pour configurer les profils d'association (multi-tenant)",
         "Génération automatique des dossiers de candidature (templates)",
         "Suivi des candidatures déposées et de leur statut",

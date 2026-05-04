@@ -99,10 +99,11 @@ def top_n(settings: Settings, limit: int = 5) -> list[dict[str, Any]]:
     Selection: 'scored' (new) and 'notified' (already sent) are both eligible.
     Excluded: 'rejected' (NOT_ELIGIBLE), 'expired' (deadline passed).
 
-    Ordering — strict 3-level hierarchy:
-      1. Complete (amount + deadline both filled)  >  Incomplete
-      2. Within each: never-sent ('scored')  >  already-sent ('notified')
-      3. Within each subgroup: score desc
+    Ordering — strict 4-level hierarchy:
+      1. ELIGIBLE  >  POTENTIALLY_ELIGIBLE   (geography is critère N°1)
+      2. Complete (amount + deadline both filled)  >  Incomplete
+      3. Never-sent ('scored')  >  already-sent ('notified')
+      4. Score desc
     """
     with connect(settings.db_path) as conn:
         rows = conn.execute(
@@ -114,29 +115,50 @@ def top_n(settings: Settings, limit: int = 5) -> list[dict[str, Any]]:
         ).fetchall()
     grants = [dict(r) for r in rows]
 
-    complete_new: list[dict[str, Any]] = []
-    complete_old: list[dict[str, Any]] = []
-    incomplete_new: list[dict[str, Any]] = []
-    incomplete_old: list[dict[str, Any]] = []
+    # 8 buckets: 2 (eligibility tier) × 2 (complete) × 2 (new)
+    buckets: dict[tuple[str, bool, bool], list[dict[str, Any]]] = {
+        (tier, complete, new): []
+        for tier in ("ELIGIBLE", "POTENTIALLY_ELIGIBLE")
+        for complete in (True, False)
+        for new in (True, False)
+    }
     for g in grants:
-        is_incomplete = _is_missing(g.get("amount")) or _is_missing(g.get("deadline"))
-        is_old = g.get("status") == "notified"
-        if is_incomplete and is_old:
-            incomplete_old.append(g)
-        elif is_incomplete:
-            incomplete_new.append(g)
-        elif is_old:
-            complete_old.append(g)
-        else:
-            complete_new.append(g)
+        verdict = _eligibility_verdict(g.get("eligibility"))
+        if verdict == "NOT_ELIGIBLE":
+            continue  # safety net — should already be filtered by status='rejected'
+        is_complete = not (_is_missing(g.get("amount")) or _is_missing(g.get("deadline")))
+        is_new = g.get("status") != "notified"
+        buckets[(verdict, is_complete, is_new)].append(g)
+
+    # Strict order: eligibility tier → completeness → freshness
+    bucket_order = [
+        ("ELIGIBLE", True, True),
+        ("ELIGIBLE", True, False),
+        ("ELIGIBLE", False, True),
+        ("ELIGIBLE", False, False),
+        ("POTENTIALLY_ELIGIBLE", True, True),
+        ("POTENTIALLY_ELIGIBLE", True, False),
+        ("POTENTIALLY_ELIGIBLE", False, True),
+        ("POTENTIALLY_ELIGIBLE", False, False),
+    ]
 
     log.info(
-        "top_n pool: complete[new=%d, old=%d] incomplete[new=%d, old=%d] → top %d",
-        len(complete_new), len(complete_old),
-        len(incomplete_new), len(incomplete_old),
+        "top_n pool — ELIGIBLE: complete[new=%d old=%d] incomplete[new=%d old=%d] | "
+        "POTENTIALLY: complete[new=%d old=%d] incomplete[new=%d old=%d] → top %d",
+        len(buckets[("ELIGIBLE", True, True)]),
+        len(buckets[("ELIGIBLE", True, False)]),
+        len(buckets[("ELIGIBLE", False, True)]),
+        len(buckets[("ELIGIBLE", False, False)]),
+        len(buckets[("POTENTIALLY_ELIGIBLE", True, True)]),
+        len(buckets[("POTENTIALLY_ELIGIBLE", True, False)]),
+        len(buckets[("POTENTIALLY_ELIGIBLE", False, True)]),
+        len(buckets[("POTENTIALLY_ELIGIBLE", False, False)]),
         limit,
     )
-    ordered = complete_new + complete_old + incomplete_new + incomplete_old
+
+    ordered: list[dict[str, Any]] = []
+    for key in bucket_order:
+        ordered.extend(buckets[key])
     return ordered[:limit]
 
 

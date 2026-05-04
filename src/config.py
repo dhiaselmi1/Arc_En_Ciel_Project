@@ -28,10 +28,8 @@ class Settings:
     email_from_name: str
     email_to: str
 
-    twilio_account_sid: str
-    twilio_auth_token: str
-    twilio_whatsapp_from: str
-    whatsapp_to: str
+    callmebot_api_key: str
+    whatsapp_to_phone: str
 
 
 def _required(name: str) -> str:
@@ -57,10 +55,8 @@ def load_settings() -> Settings:
         smtp_app_password=_required("SMTP_APP_PASSWORD"),
         email_from_name=_optional("EMAIL_FROM_NAME", "Agent Arc En Ciel"),
         email_to=_required("EMAIL_TO"),
-        twilio_account_sid=_optional("TWILIO_ACCOUNT_SID"),
-        twilio_auth_token=_optional("TWILIO_AUTH_TOKEN"),
-        twilio_whatsapp_from=_optional("TWILIO_WHATSAPP_FROM"),
-        whatsapp_to=_optional("WHATSAPP_TO"),
+        callmebot_api_key=_optional("CALLMEBOT_API_KEY"),
+        whatsapp_to_phone=_optional("WHATSAPP_TO_PHONE"),
     )
 
 
